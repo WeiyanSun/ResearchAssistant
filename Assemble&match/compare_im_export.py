@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import pdb
 import csv
+import os
+import time
 
 # define some variable
 final_order=['CONSIGNEE','SHIPPER','Matching','Y/N','Keywords in address?','Matching keyword','FOREIGN PORT','US PORT', 'COUNTRY OF ORIGIN', 'CONSIGNEE ADDRESS', 'SHIPPER ADDRESS', 'Matching Country Name']
@@ -51,7 +53,7 @@ poss_abbr_country=["CN","VN","TW","PH","TH","HK","JP","UK","KR","MY","AU","NZ","
 # create a dict for keyword match
 def create_dict():
   kw_dict={}
-  f=open("CN_prov.csv","r")
+  f=open("U:\\anything\\city_match.csv","r")
   for i in f:
     a_row=i.split(",")[0:-1]
     country=a_row[0]
@@ -137,25 +139,54 @@ def match_country(la,row,i,kw_dict):
   return la
 
 
+# # test for one file
+# raw=pd.read_csv("los_angeles_1.csv")
+# la=raw[filter_col]
+# for col in add_col:
+#   la[col]=np.nan
 
-raw=pd.read_csv("los_angeles_1.csv")
-la=raw[filter_col]
-for col in add_col:
-  la[col]=np.nan
+# la=la[final_order]
 
-la=la[final_order]
+# kw_dict=create_dict()
 
+# print("total ",len(la))
+# for i,row in la.iterrows():
+#   la=match(la,row,i,bad_word)
+#   la=match_zone(la,row,i)
+#   la=match_country(la,row,i,kw_dict)
+#   if i%5000==0:
+#   #if i==5000:
+#   #  break
+#     print (i)
+  
+# la.to_csv("la_after_after.csv",index=False,quoting=csv.QUOTE_ALL)
+   
+# iterate a directory
+path="U:\\anything\\los_angeles - Copy"
+out_path="U:\\nything\\los_angeles_Victor"
 kw_dict=create_dict()
 
-print("total ",len(la))
-for i,row in la.iterrows():
-  la=match(la,row,i,bad_word)
-  la=match_zone(la,row,i)
-  la=match_country(la,row,i,kw_dict)
-  if i%5000==0:
-  #if i==5000:
-  #  break
-    print (i)
-  
-la.to_csv("la_after_after.csv",index=False,quoting=csv.QUOTE_ALL)
-    
+for file in os.listdir(path):
+  if file.endswith(".csv"):
+    t = time.time()
+    final_path=path+"//"+file
+    raw=pd.read_csv(final_path)
+    raw.columns=[x.strip() for x in raw.columns]
+    la=raw[filter_col]
+    for col in add_col:
+      la[col]=np.nan
+
+    la=la[final_order]    
+    #print("total ",len(la))
+    for i,row in la.iterrows():
+      la=match(la,row,i,bad_word)
+      la=match_zone(la,row,i)
+      la=match_country(la,row,i,kw_dict)
+      # if i%5000==0:
+      #   print("finish ",i)
+    final_out_path=out_path+"//"+file
+    la.to_csv(final_out_path,index=False)
+    print("finish",file)
+    elapsed = time.time() - t
+    print("-----------------------------------------")
+    print("use ",elapsed," sec")
