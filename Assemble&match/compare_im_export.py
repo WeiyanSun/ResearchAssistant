@@ -88,6 +88,9 @@ def match(la,row,i,bad_word):
 
 def match_zone(la,row,i):
   address=row["SHIPPER ADDRESS"]
+  if pd.isnull(address):
+    la.iloc[i,4]=0
+    return la
   for word in kw_list:
     if word in address.upper():
       la.iloc[i,4]=1
@@ -99,31 +102,34 @@ def match_zone(la,row,i):
 
 def match_country(la,row,i,kw_dict):
   address=row['SHIPPER ADDRESS']
-  #pdb.set_trace()
+  nan_add=False
+  if type(address)==float:
+      nan_add=True
   name=row['SHIPPER']
   find=False
-  #if i==44:
-  #  pdb.set_trace()
+  
   # first filter: abbr country code, this should appear at the end of address. e.g THERE does not match TH
-  last_str=address[-2::]
-  for abbr in poss_abbr_country:
-    if abbr in last_str:
-      la.iloc[i,-1]=abbr
-      find=True
-      break
+  if nan_add==False:   
+    last_str=address[-2::]
+    for abbr in poss_abbr_country:
+      if abbr in last_str:
+        la.iloc[i,-1]=abbr
+        find=True
+        break
   # second filter, whole country name.
-  if not find:
-    for word in poss_country:
-      if word in address:
-        if word=='PERU':
-          if address[-4::]=='PERU':
+  if nan_add==False:
+    if not find:
+      for word in poss_country:
+        if word in address:
+          if word=='PERU':
+            if address[-4::]=='PERU':
+              la.iloc[i,-1]=word
+              find=True
+              break
+          else:
             la.iloc[i,-1]=word
             find=True
             break
-        else:
-          la.iloc[i,-1]=word
-          find=True
-          break
   # third filter, prov and city match in address or shipper name.
   if not find:
     for prov in list(kw_dict.keys()):
